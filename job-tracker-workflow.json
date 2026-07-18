@@ -1,0 +1,861 @@
+{
+  "name": "job-seeker",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://api.adzuna.com/v1/api/jobs/ch/search/1",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "app_id",
+              "value": "795b69b3"
+            },
+            {
+              "name": "app_key",
+              "value": "e79f62b7437d38984488251cb58690a5"
+            },
+            {
+              "name": "results_per_page",
+              "value": "20"
+            },
+            {
+              "name": "what",
+              "value": "={{ $('Query List').item.json.query }}"
+            },
+            {
+              "name": "where",
+              "value": "Zurich"
+            },
+            {
+              "name": "sort_by",
+              "value": "date"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        576,
+        -336
+      ],
+      "id": "dc445ec7-e501-4b25-b2e6-6d4a9a66746f",
+      "name": "HTTP Request",
+      "retryOnFail": true,
+      "maxTries": 4,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "results",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        464,
+        -512
+      ],
+      "id": "5c2cd315-230d-4a12-85e4-011848cb26a4",
+      "name": "Split Out",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8dd9b5c4-cffc-4bee-8387-72e73fedaf05",
+              "name": "job_title",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "53be1b9b-ebf7-4b26-a42e-5391220c3122",
+              "name": "company",
+              "value": "={{ $json.company.display_name }}",
+              "type": "string"
+            },
+            {
+              "id": "987a125d-a72f-4b9c-abe2-c90d54aa95f5",
+              "name": "location",
+              "value": "={{ $json.location.display_name }}",
+              "type": "string"
+            },
+            {
+              "id": "fb7f8fc9-c066-40bb-9d66-b2bb93f4f2a8",
+              "name": "url",
+              "value": "={{ $json.redirect_url }}",
+              "type": "string"
+            },
+            {
+              "id": "2d8077b0-76f6-4401-8fd5-0e9f0b0c2c1b",
+              "name": "job_id",
+              "value": "={{ $json.id }}",
+              "type": "number"
+            },
+            {
+              "id": "2d68cd81-9776-4952-8993-c78c324e9f76",
+              "name": "published",
+              "value": "={{ $json.created }}",
+              "type": "string"
+            },
+            {
+              "id": "fec23081-d4f4-435a-b508-2d398e8e3b02",
+              "name": "description",
+              "value": "={{ $json.description }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        704,
+        -512
+      ],
+      "id": "2b27e10d-f8f9-46ae-baa2-f99934bdff26",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// Filtro per punteggio (già calcolato nel nodo precedente)\nconst results = items.filter(item => item.json.ai_score >= 6);\n\n// Dedup nel batch\nconst seen = new Set();\nreturn results.filter(item => {\n  const id = String(item.json.job_id);\n  if (seen.has(id)) return false;\n  seen.add(id);\n  return true;\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2128,
+        -1040
+      ],
+      "id": "604fc106-6de4-49a0-9a81-4da7e7be7436",
+      "name": "Code in JavaScript",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1Xq__R4kVUmdi2Gdht0aR268r3WNxInyj5JQbhGv8MKg",
+          "mode": "list",
+          "cachedResultName": "job_tracker",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Xq__R4kVUmdi2Gdht0aR268r3WNxInyj5JQbhGv8MKg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Foglio1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Xq__R4kVUmdi2Gdht0aR268r3WNxInyj5JQbhGv8MKg/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "job_id": "={{ $json.job_id }}",
+            "job_title": "={{ $json.job_title }}",
+            "company": "={{ $json.company }}",
+            "location": "={{ $json.location }}",
+            "url": "={{ $json.url }}",
+            "published": "={{ $json.published }}",
+            "ai_score": "={{ $json.ai_score }}",
+            "Colonna 1": "={{ $json.ai_category }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "job_id",
+              "displayName": "job_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "job_title",
+              "displayName": "job_title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "location",
+              "displayName": "location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "url",
+              "displayName": "url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "published",
+              "displayName": "published",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ai_score",
+              "displayName": "ai_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Colonna 1",
+              "displayName": "Colonna 1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1872,
+        176
+      ],
+      "id": "e3a46b12-a339-43fe-8e4b-dc4da1a1b7ac",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "7wZFkSvrfNnsVOzL",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Xq__R4kVUmdi2Gdht0aR268r3WNxInyj5JQbhGv8MKg",
+          "mode": "list",
+          "cachedResultName": "job_tracker",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Xq__R4kVUmdi2Gdht0aR268r3WNxInyj5JQbhGv8MKg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Foglio1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Xq__R4kVUmdi2Gdht0aR268r3WNxInyj5JQbhGv8MKg/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        80,
+        -48
+      ],
+      "id": "1b3ed8a9-07e9-41b6-840f-c736ce3b20c2",
+      "name": "Get row(s) in sheet",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "7wZFkSvrfNnsVOzL",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "fieldsToMatchString": "job_id",
+        "joinMode": "keepNonMatches",
+        "outputDataFrom": "input1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2208,
+        -48
+      ],
+      "id": "a98aeea8-eed9-46ee-91b0-bdb09d48ce44",
+      "name": "Merge",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8,16 * * *"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -464,
+        -432
+      ],
+      "id": "c934bdf1-7a4a-40b5-a907-7f97b91e2950",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "const queries = [\n/**\n 'data', 'analyst', 'scientist', 'engineer', 'risk', 'modelling', 'specialist', 'sustainability', 'environmental', 'actuarial', 'quantitative',\n  'data scientist',\n  'catastrophe',\n  'machine learning',\n  'reinsurance',\n  'agricultural',* \n */\n  'climate'\n];\n\nreturn queries.map(q => ({ json: { query: q } }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        16,
+        -352
+      ],
+      "id": "14615b06-0e23-4a56-82a8-a53295a29ce1",
+      "name": "Query List"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nif (items.length === 0) {\n  return []; \n}\n\nlet emailHtml = \"<h2>Ecco i nuovi annunci di lavoro trovati:</h2><ul>\";\n\nfor (const item of items) {\n  const job_title = item.json.job_title || \"Titolo non specificato\";\n  const company = item.json.company || \"Azienda non specificata\";\n  const url = item.json.url || \"#\";\n  const ai_score = item.json.ai_score !== undefined ? item.json.ai_score : \"N/A\";\n  const ai_category = item.json.ai_category || \"\";\n\n  emailHtml += `<li><strong>${job_title}</strong> (${company}) — Score: ${ai_score} [${ai_category}] - <a href=\"${url}\">Link all'annuncio</a></li>`;\n}\n\nemailHtml += \"</ul><br><p>Buona giornata!</p>\";\n\nreturn [{\n  json: {\n    emailBody: emailHtml\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2368,
+        176
+      ],
+      "id": "860e9881-4574-4a5f-a766-b3ed54229ead",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $env.N8N_EMAIL_RECIPIENT }}",
+        "subject": "Nuovi annunci di lavoro da n8n",
+        "message": "={{ $json.emailBody }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2208,
+        400
+      ],
+      "id": "cf1d7d05-11fc-4203-80ea-0053b4a3a6d2",
+      "name": "Send a message",
+      "webhookId": "4ddc2177-73d5-457d-aae9-e86ec9e41fb9",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "6R8GUS1N0KRLWpA3",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        288,
+        -352
+      ],
+      "id": "df43120f-388d-4fff-944e-79885e13c623",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        848,
+        -336
+      ],
+      "id": "aa9d45e8-3900-40b3-a8d5-36ae38f4e356",
+      "name": "Wait",
+      "webhookId": "e5610d66-f2b3-488a-88e7-56741a0f5f3f"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1312,
+        -768
+      ],
+      "id": "fb4aa068-0914-47fc-8546-6e334137af94",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "amount": 6
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2000,
+        -736
+      ],
+      "id": "b485f1e3-41dd-4164-ad8b-94bba91e5ecf",
+      "name": "Wait1",
+      "webhookId": "6c0d179a-7113-4d9c-8f3a-4917148237a1"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.1-flash-lite",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.1-flash-lite"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Agisci come un recruiter tecnico rigoroso. Il tuo unico compito è stimare \nquanto le COMPETENZE ED ESPERIENZE REALI del candidato corrispondono ai \nREQUISITI ESPLICITI del ruolo. Non premiare l'interesse tematico del candidato \nper un settore: conta solo se il candidato è oggettivamente idoneo a questo \nruolo specifico, oggi.\n\nPROFILO REALE DEL CANDIDATO\n\nLivello di studio: Laurea Magistrale (MSc), NESSUN dottorato/PhD.\nAnni di esperienza lavorativa post-laurea: meno di 1 anno totale (4 mesi \nSoftware Developer + 7 mesi internship). NESSUNA esperienza in ruoli senior, \ndi leadership, o di gestione team.\n\nEsperienza concreta:\n- Software Developer (4 mesi, Lifeware AG): sviluppo GUI in Smalltalk per \n  software di assicurazioni vita, OOP, Test Driven Development. Questo conta \n  come esposizione reale (non solo teorica) a terminologia e processi del \n  settore assicurativo — non ignorare o minimizzare questo punto.\n- Intern Inventory & Logistics (7 mesi, Nagra): simulazioni Monte Carlo (MCNP6) \n  per criticality safety, sensitivity analysis, pipeline Python per validazione \n  dataset industriali.\n- Tesi magistrale e bachelor: Monte Carlo, calcoli numerici, fisica teorica.\n- Progetto universitario: modelli ML (LSTM, Transformer, Random Forest) per \n  forecasting finanziario. Questo conta come esperienza pratica di ML applicato, \n  anche se in contesto accademico/progettuale e non produzione aziendale — \n  dagli credito parziale, non trattarlo come \"nessuna esperienza ML\".\n\nCompetenze tecniche: Python, Fortran90, Mathematica, Smalltalk, R, C++, MATLAB, \nMonte Carlo, statistica, ML/DL di base.\n\nInteressi dichiarati (SOLO come tag informativo — NON usare per alzare il \npunteggio): Cat/Climate/Agricultural risk modelling, ricerca ambientale, \nruoli STEM generalisti, automazione/n8n.\n\nFILTRI HARD — applica questi PRIMA di ogni altra valutazione:\n\nFILTRO 1 — Titolo di studio richiesto:\nSe il ruolo richiede ESPLICITAMENTE ED IN MODO NON NEGOZIABILE un dottorato/PhD \n(es. \"PhD required\", \"Postdoc position\", \"Doctoral degree required\") → \npunteggio massimo 2, indipendentemente da quanto il resto sembri in target.\nSe il PhD è solo \"preferito\"/\"a plus\" ma non obbligatorio → non applicare \nquesto filtro, valuta normalmente.\n\nFILTRO 2 — Livello di seniority richiesto:\nSe il titolo del ruolo contiene Head of / Director / Senior (con 5+ anni \nrichiesti) / Lead / Principal / VP / Chief, OPPURE la descrizione richiede \nesplicitamente gestione di team, anni di esperienza in doppia cifra, o \nownership strategica di alto livello → punteggio massimo 3, perché il \ncandidato ha meno di 1 anno di esperienza totale e nessuna esperienza di \nleadership. Questo vale ANCHE SE il dominio (es. Geospatial AI, Climate) \nè di forte interesse per il candidato — l'interesse tematico non compensa \nun gap di seniority strutturale.\n\nFILTRO 3 — Dominio totalmente estraneo:\nSe il ruolo richiede conoscenza specifica di un dominio in cui il candidato \nnon ha NESSUNA esposizione, né diretta né adiacente (es. biomedicale/clinico, \nlegale, farmaceutico specifico, HR, sales) E non ci sono competenze tecniche \ntrasversali rilevanti richieste (Python, statistica, modellazione) → \npunteggio massimo 2-3.\n\nSe nessuno di questi filtri hard si applica, procedi con la valutazione \nnormale sotto.\n\nVALUTAZIONE NORMALE (solo se i filtri hard non hanno già limitato il punteggio)\n\nConfronta punto per punto i requisiti elencati nella job description con le \ncompetenze/esperienze reali sopra elencate. Dai credito parziale per esperienza \nadiacente o trasferibile (es. ML accademico conta per requisiti ML generici; \nesposizione a terminologia assicurativa in un ruolo precedente conta per \nrequisiti di conoscenza assicurativa generica) — non essere severo al punto \nda esigere un match identico e letterale.\n\nSCALA:\n1-2: Nessuna sovrapposizione reale di competenze, o filtro hard applicato\n3-4: Sovrapposizione debole — 1-2 requisiti tecnici coincidono ma il resto \n     del ruolo richiede competenze/esperienza che il candidato non ha\n5-6: Sovrapposizione buona — la maggior parte dei requisiti tecnici/di \n     background coincide, eventuali gap sono su aspetti secondari o \n     colmabili con esperienza adiacente già posseduta\n7-8: Forte corrispondenza — quasi tutti i requisiti espliciti sono soddisfatti \n     dal profilo reale del candidato, seniority e titolo di studio richiesti \n     sono compatibili\n9-10: Corrispondenza pressoché perfetta tra requisiti e profilo\n\nREGOLE FINALI\n- Il punteggio riflette SOLO idoneità reale oggi, non il fatto che il ruolo \n  sia interessante o allineato agli obiettivi di carriera del candidato.\n- Non penalizzare esperienza adiacente/trasferibile come se fosse assenza \n  di esperienza (es. ML accademico ≠ zero esperienza ML; lavoro precedente \n  in azienda assicurativa ≠ zero conoscenza del settore assicurativo).\n- Non premiare un ruolo solo perché tematicamente vicino agli interessi \n  dichiarati, se i filtri hard su titolo di studio o seniority non sono \n  superati.\nNOTA SULLA QUALITÀ DEI DATI IN INGRESSO\nLa job description fornita proviene da un'API aggregatore e potrebbe essere \nTRONCATA — cioè interrotta a metà frase o prima di arrivare alla sezione \nrequisiti/qualifiche, anche se il testo sembra grammaticalmente concluso. \nSegnali che la description potrebbe essere incompleta: il testo è breve \n(sotto ~400 caratteri), termina bruscamente senza una vera conclusione, \noppure copre solo responsabilità/attività senza menzionare requisiti, \ntitolo di studio o competenze richieste.\n\nIn questi casi:\n- NON interpretare l'assenza di un requisito nel testo come conferma che \n  quel requisito non esiste per il ruolo — significa solo che non è visibile \n  in questo estratto.\n- Basa la valutazione principalmente sul titolo del ruolo, sul poco testo \n  disponibile, e su cosa è tipicamente richiesto per ruoli di quel tipo/settore.\n- Sii più conservativo: evita punteggi agli estremi (0-2 o 9-10) quando \n  l'informazione è chiaramente incompleta, preferendo la fascia centrale \n  (4-6) a meno che il titolo del ruolo da solo non renda già ovvio un \n  disallineamento netto (es. titolo palesemente estraneo al profilo).\n- Nella motivazione, se applichi questo ragionamento, indicalo brevemente \n  (es. \"Descrizione parziale, valutazione basata su titolo e contesto\").\n\nJob description:\n{{ $json.description }}\n\nRestituisci ESCLUSIVAMENTE un oggetto JSON valido, senza markdown:\n{\n  \"punteggio\": <numero intero da 0 a 10>,\n  \"categoria\": \"<una tra: Cat/Climate/Reinsurance, Environmental Research, \n                Nuclear/Criticality, STEM Generalist/IT, Altro>\",\n  \"motivazione\": \"<massimo 25 parole: cita il requisito chiave rispettato \n                   o il filtro hard applicato>\"\n}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        1536,
+        -752
+      ],
+      "id": "25ed93e7-7408-466a-89e4-773971ffa7a2",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "jk3lhDAjyNrjfTsh",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const original = $('Loop Over Items1').item.json;\nconst aiRaw = $input.item.json;\n\nlet parsed;\ntry {\n  const raw = (aiRaw.content?.parts?.[0]?.text || '')\n    .replace(/```json|```/g, '')\n    .trim();\n  parsed = JSON.parse(raw);\n} catch (e) {\n  parsed = { punteggio: 0, categoria: 'N/A', motivazione: 'AI parsing failed' };\n}\n\nreturn {\n  json: {\n    ...original,\n    ai_score: parsed.punteggio,\n    ai_category: parsed.categoria,\n    ai_reason: parsed.motivazione\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1824,
+        -736
+      ],
+      "id": "2b131b2a-af47-4023-9653-4fafb2778e25",
+      "name": "Merge AI + Job Data"
+    },
+    {
+      "parameters": {
+        "jsCode": "const acadFields = [\n  'physics',\n  'mathematics-statistics-datascience',\n  'computer-science',\n  'earth-and-environmental-systems-sciences',\n  'engineering'\n];\n\nreturn acadFields.map(f => ({\n  json: { url: `https://acadjobs.com/${f}/ch/all-categories/all-job-types/all-levels` }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -208,
+        -816
+      ],
+      "id": "97968d8f-16c8-415f-8576-d683c3c31c6f",
+      "name": "Query List2"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        0,
+        -816
+      ],
+      "id": "6e8772cc-4db2-4e79-8fd1-d1a80fe5d21c",
+      "name": "Loop Over Items2"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        384,
+        -800
+      ],
+      "id": "e7297ce8-c5f6-499c-9876-d97b3890e31f",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "amount": 3
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        688,
+        -800
+      ],
+      "id": "de183d1a-692d-446f-a7a2-75a5e9b71052",
+      "name": "Wait2",
+      "webhookId": "fa27dd84-801f-4bb7-bbde-aac2ba23b11e"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1072,
+        -768
+      ],
+      "id": "5f471310-d3f8-4e92-9a71-81a9fc234c5b",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst jobs = [];\n\nfunction clean(str) {\n  return str\n    .replace(/&nbsp;/g, ' ')\n    .replace(/&amp;/g, '&')\n    .replace(/<[^>]+>/g, ' ')\n    .replace(/\\s+/g, ' ')\n    .trim();\n}\n\nfor (const item of items) {\n  const html = item.json.data || item.json.body || '';\n  const chunks = html.split('<div class=\"item\"').slice(1);\n\n  for (const chunk of chunks) {\n    const tokenMatch = chunk.match(/token=([A-Za-z0-9_\\-]+)\"/);\n    const titleMatch = chunk.match(/<a href=\"\\/job\\/\\?token=[^\"]+\"[^>]*>([\\s\\S]*?)<\\/a>/);\n    const companyLocMatch = chunk.match(/<td style=\"text-align:left;font-size:12px\">([\\s\\S]*?)<\\/td>/);\n    const publishedMatch = chunk.match(/Published:\\s*([^']+)'/);\n    const descMatches = [...chunk.matchAll(/<td\\s+width=\"50%\"\\s+valign=\"top\"\\s+style=\"text-align:justify\"\\s*>([\\s\\S]*?)<\\/td>/g)];\n\n    if (!tokenMatch || !titleMatch) continue;\n\n    const token = tokenMatch[1];\n    let rawTitle = clean(titleMatch[1]);\n\n    let countries = '';\n    let title = rawTitle;\n    const titleSplit = rawTitle.match(/^([a-z]{2}(?:,\\s*[a-z]{2})*)\\s*:\\s*(.+)$/i);\n    if (titleSplit) {\n      countries = titleSplit[1].replace(/\\s+/g, '');\n      title = titleSplit[2].trim();\n    }\n\n    let company = '', location = '';\n    if (companyLocMatch) {\n      const parts = clean(companyLocMatch[1]).split(';');\n      company = (parts[0] || '').trim();\n      location = (parts.slice(1).join(';') || '').trim();\n    }\n\n    const description = descMatches.map(m => clean(m[1])).join(' | ');\n    const published = publishedMatch ? publishedMatch[1].trim() : '';\n\n    jobs.push({\n      json: {\n        job_id: token,\n        job_title: title,\n        countries,\n        company,\n        location,\n        url: `https://acadjobs.com/job/?token=${token}`,\n        published,\n        description\n      }\n    });\n  }\n}\n\n// Dedup: la stessa offerta può comparire in più field (physics, math, ecc.)\nconst seen = new Set();\nreturn jobs.filter(item => {\n  const id = String(item.json.job_id);\n  if (seen.has(id)) return false;\n  seen.add(id);\n  return true;\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        688,
+        -1040
+      ],
+      "id": "ebdcf009-73dc-4fd2-9739-12dee0fc0d34",
+      "name": "Parse acad.jobs HTML"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Query List",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Query List2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query List": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Merge AI + Job Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge AI + Job Data": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query List2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items2": {
+      "main": [
+        [
+          {
+            "node": "Parse acad.jobs HTML",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse acad.jobs HTML": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "86f06321-b169-4114-aad1-d5322657a804",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5129a5cb60fdf77207808ae1d8c8eb9d7429eaa9f8d3b9513f5c7c3a9f44acff"
+  },
+  "nodeGroups": [],
+  "id": "NtVh0MliWWFjiaBi",
+  "tags": []
+}

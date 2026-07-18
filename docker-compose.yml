@@ -1,0 +1,17 @@
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    container_name: n8n_compose
+    restart: always
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_EMAIL_RECIPIENT=parrigiovanni610@gmail.com
+      - N8N_GOOGLE_SHEET_ID=1Xq__R4kVUmdi2Gdht0aR268r3WNxInyj5JQbhGv8MKg
+      - N8N_BLOCK_ENV_ACCESS_IN_NODE=false
+    volumes:
+      - n8n_data:/home/node/.n8n
+
+volumes:
+  n8n_data:
+    external: true
